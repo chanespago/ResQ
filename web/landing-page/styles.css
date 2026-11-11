@@ -125,10 +125,10 @@
     .install-note { display: grid; grid-template-columns: 24px 1fr; gap: 11px; max-width: 870px; margin: 19px auto 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
     .install-note svg { color: #ffb66d; }
 
-    .footer { padding: 28px 0; border-top: 1px solid #ffffff0d; color: var(--dim); font-size: 11px; }
+    .footer { padding: 12px 0 28px; border-top: 1px solid #ffffff0d; color: var(--dim); font-size: 11px; }
     .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
     .footer-brand { color: #c6c6c9; font: 700 15px "Space Grotesk", sans-serif; }
-    .emergency-note { max-width: 900px; margin: 21px auto 0; padding: 14px 16px; border: 1px solid #3c3030; border-radius: 11px; background: #171313; color: #bcb4b4; font-size: 11px; line-height: 1.65; }
+    .emergency-note { max-width: 900px; margin: 12px auto 0; padding: 14px 16px; border: 1px solid #3c3030; border-radius: 11px; background: #171313; color: #bcb4b4; font-size: 11px; line-height: 1.65; }
 
     @media (max-width: 800px) {
       .hero { padding: 73px 0 60px; }
@@ -165,7 +165,7 @@
       .carousel-controls { flex-wrap: wrap; gap: 13px; }
       .offline-band { padding: 23px 18px; }
       .offline-list { grid-template-columns: 1fr; }
-      .download { padding-top: 0; }
+      .download { padding-top: 24px; }
       .download-card h2 { font-size: 25px; }
       .footer-inner { align-items: flex-start; flex-direction: column; }
     }
