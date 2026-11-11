@@ -4,13 +4,14 @@ This is a static, dependency-free landing page. Open `index.html` directly in a 
 
 ## Enable APK downloads
 
-After creating a public GitHub repository and publishing a GitHub Release with the APK asset named `RESQ.apk`, set `githubRepository` near the top of `script.js` to `owner/repository`:
+The landing page download button links to the APK asset in the latest public GitHub Release. Keep `githubRepository` and `apkFileName` near the top of `script.js` in sync with the repository and the exact asset filename:
 
 ```js
 const githubRepository = "owner/ResQ";
+const apkFileName = "RESQ.apk";
 ```
 
-The download button will then link to the latest release asset at `https://github.com/owner/ResQ/releases/latest/download/RESQ.apk`.
+The download button links to `https://github.com/owner/ResQ/releases/latest/download/RESQ.apk`. If you change the APK asset name in a release, update `apkFileName` to match.
 
 ## Publish with GitHub Pages
 
