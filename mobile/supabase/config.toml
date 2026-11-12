@@ -1,0 +1,2 @@
+[functions.notify-nearby-sos]
+verify_jwt = false

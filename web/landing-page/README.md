@@ -1,4 +1,4 @@
-# RESQ landing page
+# ResQ landing page
 
 This is a static, dependency-free landing page. Open `index.html` directly in a browser to preview it. Its styles and interactive behavior are kept in `styles.css` and `script.js`. The `screenshots` folder contains the real app screens shown in the carousel, which loops automatically and pauses during interaction or when reduced motion is enabled.
 
@@ -8,10 +8,10 @@ The landing page download button links to the APK asset in the latest public Git
 
 ```js
 const githubRepository = "owner/ResQ";
-const apkFileName = "RESQ.apk";
+const apkFileName = "ResQ.apk";
 ```
 
-The download button links to `https://github.com/owner/ResQ/releases/latest/download/RESQ.apk`. If you change the APK asset name in a release, update `apkFileName` to match.
+The download button links to `https://github.com/owner/ResQ/releases/latest/download/ResQ.apk`. If you change the APK asset name in a release, update `apkFileName` to match.
 
 ## Publish with GitHub Pages
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { ArrowUpRight, MapPin, Navigation, RefreshCw, Shield, X } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,15 +13,16 @@ import { colors, font } from '../../theme';
 type NearbySos = {
   id: string;
   display_name: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   created_at: string;
-  distance_meters: number;
+  distance_meters: number | null;
   responder_count: number;
   is_responding: boolean;
 };
 
 export default function AlertsScreen() {
+  const { alertId: routeAlertId } = useLocalSearchParams<{ alertId?: string }>();
   const { user } = useAuth();
   const { preferences } = useAppPreferences();
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -64,6 +66,32 @@ export default function AlertsScreen() {
     return () => { active = false; clearInterval(timer); };
   }, [location, user]);
 
+  useEffect(() => {
+    if (!routeAlertId || !user) return;
+    let active = true;
+    void (async () => {
+      try {
+        const { data, error: alertError } = await getSupabaseClient()
+          .rpc('sos_alert_by_id', { p_alert_id: routeAlertId });
+        if (!active) return;
+        if (alertError) {
+          setError(alertError.message);
+          return;
+        }
+        setError('');
+        const alert = (data ?? [])[0] as NearbySos | undefined;
+        if (!alert) {
+          setError('This SOS is no longer active or is no longer available to you.');
+          return;
+        }
+        setSelectedRequest(alert);
+      } catch (alertError) {
+        if (active) setError(alertError instanceof Error ? alertError.message : 'Could not load this SOS alert.');
+      }
+    })();
+    return () => { active = false; };
+  }, [routeAlertId, user]);
+
   async function startNearbyScan() {
     if (!preferences.communitySharing) {
       setError('Turn on community sharing in Settings to find nearby SOS requests.');
@@ -94,13 +122,27 @@ export default function AlertsScreen() {
       setError(responseError.message);
       return;
     }
-    setRequests((current) => current.map((item) => item.id === request.id
-      ? { ...item, is_responding: !item.is_responding, responder_count: Math.max(0, item.responder_count + (item.is_responding ? -1 : 1)) }
-      : item));
-    setSelectedRequest((current) => current?.id === request.id ? { ...current, is_responding: !current.is_responding } : current);
+    const { data: updatedAlerts, error: refreshError } = await getSupabaseClient()
+      .rpc('sos_alert_by_id', { p_alert_id: request.id });
+    if (refreshError) {
+      setError(refreshError.message);
+      return;
+    }
+    const updatedRequest = (updatedAlerts ?? [])[0] as NearbySos | undefined;
+    if (!updatedRequest) {
+      setError('This SOS is no longer active.');
+      setSelectedRequest(null);
+      return;
+    }
+    setRequests((current) => current.map((item) => item.id === request.id ? updatedRequest : item));
+    setSelectedRequest(updatedRequest);
   }
 
   async function openMap(request: NearbySos) {
+    if (request.latitude === null || request.longitude === null) {
+      setError('This SOS does not have a location to show.');
+      return;
+    }
     try {
       await Linking.openURL(`https://maps.google.com/?q=${request.latitude},${request.longitude}`);
     } catch {
@@ -111,10 +153,10 @@ export default function AlertsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenTitle title="Help requests" subtitle="Active SOS alerts shared by nearby RESQ users." />
+        <ScreenTitle title="Help requests" subtitle="Active SOS alerts shared by nearby ResQ users." />
         <View style={styles.infoNotice}>
           <Shield color={colors.green} size={16} />
-          <Text style={styles.noticeText}>Only active alerts within 10 km are shown. Your location is used while this screen is open.</Text>
+          <Text style={styles.noticeText}>Only active alerts within 10 km are shown while scanning. Push alerts are sent for requests within 5 km of a recent background location.</Text>
         </View>
         {!location ? (
           <Pressable accessibilityRole="button" disabled={loading} onPress={() => { void startNearbyScan(); }} style={[styles.scanButton, loading && styles.disabled]}>
@@ -149,7 +191,7 @@ export default function AlertsScreen() {
                     <Text style={[styles.requestStatus, request.is_responding && styles.responding]}>{request.is_responding ? 'RESPONDING' : 'ACTIVE'}</Text>
                   </View>
                   <Text style={styles.category}>Personal safety request</Text>
-                  <View style={styles.requestMeta}><MapPin color={colors.muted} size={12} /><Text style={styles.metaText}>{formatDistance(request.distance_meters)} · {formatAge(request.created_at)}</Text></View>
+                  <View style={styles.requestMeta}><MapPin color={colors.muted} size={12} /><Text style={styles.metaText}>{request.distance_meters === null ? 'Distance unavailable' : formatDistance(request.distance_meters)} · {formatAge(request.created_at)}</Text></View>
                   <Text style={styles.metaText}>{request.responder_count} responding</Text>
                 </View>
                 <ArrowUpRight color={colors.dim} size={17} />
@@ -171,11 +213,15 @@ export default function AlertsScreen() {
               <Panel style={styles.locationPanel}>
                 <MapPin color={colors.blue} size={16} />
                 <View style={styles.locationCopy}>
-                  <Text style={styles.locationTitle}>{formatDistance(selectedRequest.distance_meters)} away</Text>
-                  <Text style={styles.locationMeta}>{selectedRequest.latitude.toFixed(5)}, {selectedRequest.longitude.toFixed(5)}</Text>
+                  <Text style={styles.locationTitle}>{selectedRequest.distance_meters === null ? 'Distance unavailable' : `${formatDistance(selectedRequest.distance_meters)} away`}</Text>
+                  <Text style={styles.locationMeta}>{selectedRequest.latitude === null || selectedRequest.longitude === null
+                    ? 'Location unavailable'
+                    : `${selectedRequest.latitude.toFixed(5)}, ${selectedRequest.longitude.toFixed(5)}`}</Text>
                 </View>
               </Panel>
-              <Pressable accessibilityRole="button" onPress={() => { void openMap(selectedRequest); }} style={styles.mapButton}><MapPin color={colors.blue} size={15} /><Text style={styles.mapText}>Open map</Text></Pressable>
+              {selectedRequest.latitude !== null && selectedRequest.longitude !== null ? (
+                <Pressable accessibilityRole="button" onPress={() => { void openMap(selectedRequest); }} style={styles.mapButton}><MapPin color={colors.blue} size={15} /><Text style={styles.mapText}>Open map</Text></Pressable>
+              ) : null}
               <Pressable accessibilityRole="button" onPress={() => { void toggleResponding(selectedRequest); }} style={styles.respondButton}>
                 <Text style={styles.respondText}>{selectedRequest.is_responding ? 'Stop responding' : 'I can help'}</Text>
               </Pressable>

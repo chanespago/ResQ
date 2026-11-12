@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "RESQ",
+    "name": "ResQ",
     "slug": "resq",
     "scheme": "resq",
     "version": "1.0.0",
@@ -23,20 +23,26 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow RESQ to share your location when you activate SOS."
+          "locationWhenInUsePermission": "Allow ResQ to share your location when you activate SOS.",
+          "locationAlwaysAndWhenInUsePermission": "Allow ResQ to share your location in the background for nearby SOS alerts. You can turn this off in Settings.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
+      "expo-notifications",
       [
         "expo-contacts",
         {
-          "contactsPermission": "Allow RESQ to import emergency contacts you select."
+          "contactsPermission": "Allow ResQ to import emergency contacts you select."
         }
       ],
       [
         "expo-splash-screen",
         {
+          "image": "./assets/splash-icon.png",
           "backgroundColor": "#080809",
-          "imageWidth": 160
+          "imageWidth": 200
         }
       ]
     ],
@@ -54,10 +60,8 @@
         "VIBRATE"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/icon.png"
       },
       "predictiveBackGestureEnabled": false
     },

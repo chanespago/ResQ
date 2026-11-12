@@ -31,7 +31,7 @@ export default function SplashScreen() {
           <View style={styles.markGlow} />
           <ShieldCheck color={colors.red} size={39} strokeWidth={1.7} />
         </View>
-        <Text style={styles.brand}>RESQ</Text>
+        <Text style={styles.brand}>ResQ</Text>
         <View style={styles.rule} />
         <Text style={styles.copy}>A little more prepared.{ '\n' }Everywhere you go.</Text>
       </Animated.View>

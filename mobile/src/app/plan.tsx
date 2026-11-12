@@ -115,7 +115,7 @@ export default function ReunificationPlanScreen() {
         <ScreenTitle title="Reunification plan" subtitle="Decide where your household will meet if you get separated during an emergency. Your plan stays on this device and is available offline." />
         <View style={styles.privacy}>
           <ShieldCheck color={colors.green} size={16} />
-          <Text style={styles.privacyText}>Your plan is encrypted and saved only on this device. It is not sent to RESQ or your contacts.</Text>
+          <Text style={styles.privacyText}>Your plan is encrypted and saved only on this device. It is not sent to ResQ or your contacts.</Text>
         </View>
         {loading ? <ActivityIndicator style={styles.loader} color={colors.red} /> : (
           <>

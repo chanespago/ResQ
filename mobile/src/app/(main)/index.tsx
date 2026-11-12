@@ -13,6 +13,10 @@ import { Panel, StatusPill } from '../../components';
 import { useAppPreferences } from '../../appPreferences';
 import { useAuth } from '../../auth/AuthProvider';
 import { getSupabaseClient } from '../../backend/supabase';
+import {
+  reconcileBackgroundLocationUpdates,
+  requestBackgroundLocationPermissions,
+} from '../../location/backgroundLocation';
 import { colors, font } from '../../theme';
 
 const tools = [
@@ -226,6 +230,15 @@ export default function SafetyScreen() {
         longitude: location.coords.longitude,
         accuracy: location.coords.accuracy,
       } : null);
+      try {
+        if (location) await requestBackgroundLocationPermissions();
+        await reconcileBackgroundLocationUpdates(user.id, preferences.backgroundLocationSharing);
+      } catch (locationError) {
+        Alert.alert(
+          'Live location updates unavailable',
+          locationError instanceof Error ? locationError.message : 'Your SOS was sent with its starting location.',
+        );
+      }
     } catch (error) {
       setEmergencyVisible(false);
       emergencyStart.current = null;
@@ -262,11 +275,11 @@ export default function SafetyScreen() {
         return;
       }
 
-      const sender = typeof user.user_metadata.display_name === 'string' ? user.user_metadata.display_name : 'A RESQ user';
+      const sender = typeof user.user_metadata.display_name === 'string' ? user.user_metadata.display_name : 'A ResQ user';
       const locationLink = sosLocation
         ? ` Location: https://maps.google.com/?q=${sosLocation.latitude},${sosLocation.longitude}`
         : ' Location permission was unavailable.';
-      const message = `${sender} activated an SOS alert in RESQ.${locationLink} Please contact them now.`;
+      const message = `${sender} activated an SOS alert in ResQ.${locationLink} Please contact them now.`;
       const result = await SMS.sendSMSAsync(recipients, message);
       setContactMessageStatus(result.result === 'sent'
         ? 'SMS marked as sent by the device.'
@@ -284,7 +297,7 @@ export default function SafetyScreen() {
   }
 
   async function resolveEmergencyAlert() {
-    if (!activeAlertId) return;
+    if (!activeAlertId || !user) return;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), sosRequestTimeoutMs);
     setResolvingAlert(true);
@@ -300,6 +313,14 @@ export default function SafetyScreen() {
       if (!data) throw new Error('The alert could not be found or you no longer have permission to resolve it.');
       setEmergencyVisible(false);
       setActiveAlertId(null);
+      try {
+        await reconcileBackgroundLocationUpdates(user.id, preferences.backgroundLocationSharing);
+      } catch (locationError) {
+        Alert.alert(
+          'Background location could not be stopped',
+          locationError instanceof Error ? locationError.message : 'Check location sharing in Settings.',
+        );
+      }
     } catch (error) {
       Alert.alert(
         'Could not resolve alert',
@@ -382,7 +403,7 @@ export default function SafetyScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <View><Text style={styles.brand}>RESQ</Text></View>
+          <View><Text style={styles.brand}>ResQ</Text></View>
           <StatusPill label="Safety ready" positive />
         </View>
         <Panel style={styles.devicePill}>
@@ -468,7 +489,7 @@ export default function SafetyScreen() {
             </View>
             <Text style={styles.radarTitle}>{nearbyAlerts.length} nearby SOS {nearbyAlerts.length === 1 ? 'request' : 'requests'}</Text>
             <Text style={styles.radarCopy}>{emergencySaving ? 'Please wait while your alert is sent.' : !preferences.communitySharing ? 'Community sharing is off in Settings.' : sosLocation ? 'Live requests within 10 km. Refreshes every 12 seconds.' : 'Nearby scan unavailable without your location.'}</Text>
-            <Text style={styles.modalCopy}>{emergencySaving ? 'Keep this screen open while RESQ requests your location and sends the alert.' : preferences.communitySharing ? 'Your SOS is shared with the RESQ community. For immediate danger, call your local emergency number.' : 'Your SOS is active for you. Community sharing is off. For immediate danger, call your local emergency number.'}</Text>
+            <Text style={styles.modalCopy}>{emergencySaving ? 'Keep this screen open while ResQ requests your location and sends the alert.' : preferences.communitySharing ? 'Your SOS is shared with the ResQ community. For immediate danger, call your local emergency number.' : 'Your SOS is active for you. Community sharing is off. For immediate danger, call your local emergency number.'}</Text>
             <Panel style={styles.locationPanel}><MapPin color={colors.blue} size={16} /><View style={styles.locationText}><Text style={styles.locationTitle}>Your location</Text><Text style={styles.locationMeta}>{sosLocation ? `${sosLocation.latitude.toFixed(5)}, ${sosLocation.longitude.toFixed(5)}` : 'Unavailable · location permission not granted'}</Text></View></Panel>
             {emergencySaving ? <ActivityIndicator color={colors.red} style={{ margin: 20 }} /> : (
               <>
@@ -502,7 +523,7 @@ export default function SafetyScreen() {
             <View style={styles.alertBadge}><Volume2 color="#ff7770" size={14} /><Text style={styles.alertBadgeText}>SOUND ALARM ACTIVE</Text></View>
             <View style={[styles.timer, styles.sirenTimer]}><Volume2 color="#fff" size={28} /></View>
             <Text style={styles.modalTitle}>{alarmStatus.isLoaded ? 'Alarm playing' : 'Starting alarm…'}</Text>
-            <Text style={styles.modalCopy}>The alarm repeats until stopped. It uses your phone’s media volume and stops when RESQ leaves the foreground. Sound may be limited by your device settings.</Text>
+            <Text style={styles.modalCopy}>The alarm repeats until stopped. It uses your phone’s media volume and stops when ResQ leaves the foreground. Sound may be limited by your device settings.</Text>
             <Pressable accessibilityRole="button" onPress={stopAlarm} style={styles.endButton}><Text style={styles.endButtonText}>Stop alarm</Text></Pressable>
           </View>
         </View>

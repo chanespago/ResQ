@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getSupabaseClient, isSupabaseConfigured } from '../backend/supabase';
+import { removeBackgroundLocationForSignOut } from '../location/backgroundLocation';
+import { unregisterFromNearbySosNotifications } from '../notifications/pushNotifications';
 
 type AuthContextValue = {
   user: User | null;
@@ -56,6 +58,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       return data.session !== null;
     },
     async signOut() {
+      if (user) {
+        await unregisterFromNearbySosNotifications(user.id);
+        await removeBackgroundLocationForSignOut(user.id);
+      }
       const { error } = await getSupabaseClient().auth.signOut();
       if (error) throw error;
       setUser(null);

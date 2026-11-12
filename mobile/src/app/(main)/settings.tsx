@@ -6,6 +6,16 @@ import { BookUser, LogOut, Plus, Shield, Trash2, X } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/AuthProvider';
 import { getSupabaseClient } from '../../backend/supabase';
+import {
+  reconcileBackgroundLocationUpdates,
+  requestBackgroundLocationPermissions,
+  saveCurrentUserLocation,
+  startBackgroundLocationUpdates,
+} from '../../location/backgroundLocation';
+import {
+  registerForNearbySosNotifications,
+  unregisterFromNearbySosNotifications,
+} from '../../notifications/pushNotifications';
 import { useAppPreferences, type PreferenceKey } from '../../appPreferences';
 import { Panel, ScreenTitle } from '../../components';
 import { colors, font } from '../../theme';
@@ -20,7 +30,7 @@ type EmergencyContact = {
 
 export default function SettingsScreen() {
   const { user, signOut } = useAuth();
-  const { preferences, loading: preferencesLoading, updatePreference } = useAppPreferences();
+  const { preferences, loading: preferencesLoading, loadError: preferencesLoadError, updatePreference } = useAppPreferences();
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [contactsLoading, setContactsLoading] = useState(true);
   const [contactModalVisible, setContactModalVisible] = useState(false);
@@ -115,9 +125,60 @@ export default function SettingsScreen() {
   async function togglePreference(key: PreferenceKey, value: boolean) {
     setError('');
     try {
+      if (key === 'nearbySosNotifications') {
+        await toggleNearbySosNotifications(value);
+        return;
+      }
+      if (key === 'backgroundLocationSharing') {
+        await toggleBackgroundLocationSharing(value);
+        return;
+      }
       await updatePreference(key, value);
     } catch (updateError) {
       setError(updateError instanceof Error ? updateError.message : 'Preference could not be saved.');
+    }
+  }
+
+  async function toggleNearbySosNotifications(enabled: boolean) {
+    if (!user) return;
+    if (enabled) {
+      await registerForNearbySosNotifications(user.id);
+      try {
+        await updatePreference('nearbySosNotifications', true);
+      } catch (error) {
+        await unregisterFromNearbySosNotifications(user.id);
+        throw error;
+      }
+      return;
+    }
+
+    await updatePreference('nearbySosNotifications', false);
+    await unregisterFromNearbySosNotifications(user.id);
+  }
+
+  async function toggleBackgroundLocationSharing(enabled: boolean) {
+    if (!user) return;
+    if (!enabled) {
+      await updatePreference('backgroundLocationSharing', false);
+      await reconcileBackgroundLocationUpdates(user.id, false);
+      return;
+    }
+
+    await requestBackgroundLocationPermissions();
+    await updatePreference('backgroundLocationSharing', true);
+    try {
+      await saveCurrentUserLocation(user.id);
+      await startBackgroundLocationUpdates();
+    } catch (trackingError) {
+      try {
+        await updatePreference('backgroundLocationSharing', false);
+        await reconcileBackgroundLocationUpdates(user.id, false);
+      } catch (rollbackError) {
+        const trackingMessage = trackingError instanceof Error ? trackingError.message : String(trackingError);
+        const rollbackMessage = rollbackError instanceof Error ? rollbackError.message : String(rollbackError);
+        throw new Error(`${trackingMessage} Background sharing could not be fully turned off: ${rollbackMessage}`);
+      }
+      throw trackingError;
     }
   }
 
@@ -142,9 +203,22 @@ export default function SettingsScreen() {
 
         <SettingGroup title="SOS RESPONSE" icon={<Shield color={colors.green} size={14} />}>
           <SettingRow label="Open SMS for emergency contacts" value={preferences.smsOnSos} onToggle={(value) => { void togglePreference('smsOnSos', value); }} />
-          <SettingRow label="Share SOS with nearby RESQ users" value={preferences.communitySharing} onToggle={(value) => { void togglePreference('communitySharing', value); }} last />
+          <SettingRow label="Share SOS with nearby ResQ users" value={preferences.communitySharing} onToggle={(value) => { void togglePreference('communitySharing', value); }} />
+          <SettingRow
+            label="Nearby SOS push notifications"
+            description="Get notified about active SOS alerts within 5 km. Enable background location sharing too."
+            value={preferences.nearbySosNotifications}
+            onToggle={(value) => { void togglePreference('nearbySosNotifications', value); }}
+          />
+          <SettingRow
+            label="Share location in background"
+            description="Uses low-power location about every 15 minutes or after significant movement. Location matching data is kept for up to 1 hour; an active SOS continues sharing location until resolved."
+            value={preferences.backgroundLocationSharing}
+            onToggle={(value) => { void togglePreference('backgroundLocationSharing', value); }}
+            last
+          />
         </SettingGroup>
-        {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
+        {error || preferencesLoadError ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error || `Preferences could not be loaded: ${preferencesLoadError}`}</Text> : null}
         {preferencesLoading ? <ActivityIndicator style={styles.loading} color={colors.red} /> : null}
         <Pressable accessibilityRole="button" onPress={() => { void signOut().then(() => router.replace('/')).catch((signOutError: unknown) => setError(signOutError instanceof Error ? signOutError.message : 'Sign out failed.')); }} style={styles.signOutButton}>
           <LogOut color="#ff7770" size={16} /><Text style={styles.signOutText}>Sign out {user?.email ? `· ${user.email}` : ''}</Text>
@@ -196,12 +270,16 @@ function SettingGroup({ title, icon, children }: { title: string; icon: React.Re
   return <View style={styles.group}><View style={styles.groupTitle}>{icon}<Text style={styles.groupHeading}>{title}</Text></View><Panel style={styles.settingList}>{children}</Panel></View>;
 }
 
-function SettingRow({ label, value, onToggle, last = false }: { label: string; value: boolean; onToggle: (value: boolean) => void; last?: boolean }) {
+function SettingRow({ label, description, value, onToggle, last = false }: { label: string; description?: string; value: boolean; onToggle: (value: boolean) => void; last?: boolean }) {
   return (
     <View style={[styles.settingRow, last && styles.lastRow]}>
-      <Text style={styles.settingLabel}>{label}</Text>
+      <View style={styles.settingCopy}>
+        <Text style={styles.settingLabel}>{label}</Text>
+        {description ? <Text style={styles.settingDescription}>{description}</Text> : null}
+      </View>
       <Switch
         accessibilityLabel={label}
+        accessibilityHint={description}
         onValueChange={onToggle}
         thumbColor="#fff"
         trackColor={{ false: '#4a4a4e', true: colors.green }}
@@ -237,8 +315,10 @@ const styles = StyleSheet.create({
   groupTitle: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 8 },
   groupHeading: { color: colors.text, fontFamily: font.display, fontSize: 14 },
   settingList: { overflow: 'hidden' },
-  settingRow: { minHeight: 45, flexDirection: 'row', alignItems: 'center', gap: 9, paddingLeft: 11, paddingRight: 5, borderBottomWidth: 1, borderBottomColor: '#242426' },
+  settingRow: { minHeight: 45, flexDirection: 'row', alignItems: 'center', gap: 9, paddingVertical: 10, paddingLeft: 11, paddingRight: 5, borderBottomWidth: 1, borderBottomColor: '#242426' },
+  settingCopy: { flex: 1, gap: 4 },
   settingLabel: { flex: 1, color: '#d9d9db', fontFamily: font.regular, fontSize: 10 },
+  settingDescription: { color: colors.muted, fontFamily: font.regular, fontSize: 9, lineHeight: 13 },
   signOutButton: { minHeight: 45, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 3, borderWidth: 1, borderColor: '#5b2c2a', borderRadius: 10, backgroundColor: '#211414' },
   signOutText: { color: '#ff7770', fontFamily: font.medium, fontSize: 11 },
   backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: '#000000d9' },

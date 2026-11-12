@@ -63,7 +63,7 @@ export default function RegisterScreen() {
             <ArrowLeft color={colors.text} size={19} />
           </Pressable>
           <View style={styles.mark}><ShieldCheck color={colors.red} size={22} /></View>
-          <Text style={styles.title}>{mode === 'sign-up' ? <>Create your{'\n'}RESQ account.</> : <>Sign in to{'\n'}RESQ.</>}</Text>
+          <Text style={styles.title}>{mode === 'sign-up' ? <>Create your{'\n'}ResQ account.</> : <>Sign in to{'\n'}ResQ.</>}</Text>
           <Text style={styles.subtitle}>{mode === 'sign-up' ? 'Your safety circle starts here.' : 'Access your safety circle.'}</Text>
 
           <Panel style={styles.form}>
@@ -103,7 +103,7 @@ export default function RegisterScreen() {
             />
           </Panel>
           <View style={styles.accountSwitch}>
-            <Text style={styles.accountSwitchText}>{mode === 'sign-up' ? 'Already have an account?' : 'New to RESQ?'}</Text>
+            <Text style={styles.accountSwitchText}>{mode === 'sign-up' ? 'Already have an account?' : 'New to ResQ?'}</Text>
             <Pressable accessibilityRole="button" onPress={() => { setMode(mode === 'sign-up' ? 'sign-in' : 'sign-up'); setError(''); setMessage(''); }}>
               <Text style={styles.link}>{mode === 'sign-up' ? 'Sign in' : 'Create account'}</Text>
             </Pressable>

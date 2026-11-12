@@ -1,6 +1,6 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
-  display_name text not null default 'RESQ member',
+  display_name text not null default 'ResQ member',
   preferences jsonb not null default '{"bluetooth_enabled": false, "sms_on_sos": true, "community_sharing": true, "silent_sos": false}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -112,7 +112,7 @@ begin
     coalesce(
       nullif(trim(new.raw_user_meta_data ->> 'display_name'), ''),
       nullif(split_part(coalesce(new.email, ''), '@', 1), ''),
-      'RESQ member'
+      'ResQ member'
     )
   )
   on conflict (id) do nothing;

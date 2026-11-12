@@ -26,7 +26,7 @@
         downloadModal.showModal();
       });
       document.querySelectorAll('a[href="#download"]').forEach((link) => {
-        link.setAttribute("aria-label", "Download RESQ for Android");
+        link.setAttribute("aria-label", "Download ResQ for Android");
       });
     } else {
       downloadLink.addEventListener("click", (event) => event.preventDefault());

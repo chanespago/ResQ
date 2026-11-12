@@ -11,7 +11,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: config.name ?? 'RESQ',
+    name: config.name ?? 'ResQ',
     slug: config.slug ?? 'resq',
     extra: {
       ...config.extra,
