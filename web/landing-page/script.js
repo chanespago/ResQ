@@ -3,13 +3,28 @@
     const downloadLink = document.getElementById("apk-download");
     const downloadLabel = document.getElementById("apk-label");
     const downloadStatus = document.getElementById("download-status");
+    const downloadModal = document.getElementById("download-modal");
+    const downloadConfirm = document.getElementById("apk-download-confirm");
+    const closeDownloadModal = () => downloadModal.close();
+
+    document.getElementById("download-modal-close").addEventListener("click", closeDownloadModal);
+    document.getElementById("download-modal-cancel").addEventListener("click", closeDownloadModal);
+    downloadModal.addEventListener("click", (event) => {
+      if (event.target === downloadModal) closeDownloadModal();
+    });
 
     if (githubRepository) {
-      downloadLink.href = `https://github.com/${githubRepository}/releases/latest/download/${apkFileName}`;
+      const apkUrl = `https://github.com/${githubRepository}/releases/latest/download/${apkFileName}`;
+      downloadLink.href = apkUrl;
+      downloadConfirm.href = apkUrl;
       downloadLink.removeAttribute("aria-disabled");
       downloadLink.removeAttribute("tabindex");
       downloadLabel.textContent = "Download Android APK";
       downloadStatus.textContent = "Latest version from GitHub Releases · Android APK";
+      downloadLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        downloadModal.showModal();
+      });
       document.querySelectorAll('a[href="#download"]').forEach((link) => {
         link.setAttribute("aria-label", "Download RESQ for Android");
       });

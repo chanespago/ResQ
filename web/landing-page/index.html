@@ -166,10 +166,10 @@
         <div class="download-card">
           <div>
             <h2>Take RESQ with you.</h2>
-            <p>The Android APK will be available from the latest public GitHub Release. Check back after the project’s release page is published.</p>
+            <p>Get the latest Android APK from our public GitHub Release and install RESQ directly on your Android device.</p>
           </div>
           <div class="download-action">
-            <a class="button button-primary" id="apk-download" href="#" aria-disabled="true" tabindex="-1" download>
+            <a class="button button-primary" id="apk-download" href="#" aria-disabled="true" aria-haspopup="dialog" tabindex="-1">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v3h14v-3"/></svg>
               <span id="apk-label">APK coming soon</span>
             </a>
@@ -183,6 +183,23 @@
           <p class="wrap emergency-note">RESQ does not dispatch emergency services or guarantee message delivery. For immediate danger, call your local emergency number. Follow instructions from local authorities; this app is not a substitute for emergency services.</p>
       </div>
     </section>
+    <dialog class="download-modal" id="download-modal" aria-labelledby="download-modal-title" aria-describedby="download-modal-description">
+      <div class="download-modal-header">
+        <h2 id="download-modal-title">Install RESQ on Android</h2>
+        <button class="download-modal-close" id="download-modal-close" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+      <p id="download-modal-description">RESQ is distributed as an APK outside Google Play. Android may ask you to allow your browser to install apps from this source.</p>
+      <ol class="download-steps">
+        <li>Tap <strong>Continue to download</strong> below. When the APK finishes downloading, open it from your browser or Downloads.</li>
+        <li>If Android blocks installation, choose <strong>Settings</strong> in the prompt and enable <strong>Allow from this source</strong> for the browser you used.</li>
+        <li>Return to the installer and tap <strong>Install</strong>. You can turn off that browser permission afterward in Android’s <strong>Install unknown apps</strong> settings.</li>
+      </ol>
+      <p class="download-modal-warning">Only install APKs from sources you trust. This link downloads RESQ from the official GitHub Release.</p>
+      <div class="download-modal-actions">
+        <button class="button button-secondary" id="download-modal-cancel" type="button">Not now</button>
+        <a class="button button-primary" id="apk-download-confirm" href="#">Continue to download</a>
+      </div>
+    </dialog>
   </main>
 
   <footer class="footer">
