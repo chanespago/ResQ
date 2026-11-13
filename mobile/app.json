@@ -3,7 +3,7 @@
     "name": "ResQ",
     "slug": "resq",
     "scheme": "resq",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -55,13 +55,13 @@
     },
     "android": {
       "package": "com.resq.safety",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": [
         "VIBRATE"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#000000",
-        "foregroundImage": "./assets/icon.png"
+        "foregroundImage": "./assets/splash-icon.png"
       },
       "predictiveBackGestureEnabled": false
     },

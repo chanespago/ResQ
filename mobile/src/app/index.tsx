@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { ArrowRight, ShieldCheck } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthProvider';
 import { colors, font } from '../theme';
@@ -29,7 +29,12 @@ export default function SplashScreen() {
       <Animated.View style={[styles.content, { opacity: fade, transform: [{ translateY: lift }] }]}>
         <View style={styles.brandMark}>
           <View style={styles.markGlow} />
-          <ShieldCheck color={colors.red} size={39} strokeWidth={1.7} />
+          <Image
+            source={require('../../assets/splash-icon.png')}
+            style={styles.brandIcon}
+            resizeMode="contain"
+            accessibilityLabel="ResQ logo"
+          />
         </View>
         <Text style={styles.brand}>ResQ</Text>
         <View style={styles.rule} />
@@ -54,6 +59,7 @@ const styles = StyleSheet.create({
   content: { flex: 1, width: '100%', maxWidth: 520, alignSelf: 'center', alignItems: 'flex-start', justifyContent: 'center', paddingBottom: 36 },
   brandMark: { width: 78, height: 78, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#54211f', borderRadius: 25, backgroundColor: '#171112', marginBottom: 24 },
   markGlow: { position: 'absolute', width: 116, height: 116, borderRadius: 60, backgroundColor: '#f0443e0c' },
+  brandIcon: { width: 70, height: 70 },
   brand: { color: colors.text, fontFamily: font.displayBold, fontSize: 55, lineHeight: 62 },
   rule: { width: 40, height: 2, marginTop: 27, marginBottom: 20, backgroundColor: colors.red },
   copy: { color: '#b7b7ba', fontFamily: font.regular, fontSize: 17, lineHeight: 26 },
