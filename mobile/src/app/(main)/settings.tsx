@@ -135,7 +135,7 @@ export default function SettingsScreen() {
       }
       await updatePreference(key, value);
     } catch (updateError) {
-      setError(updateError instanceof Error ? updateError.message : 'Preference could not be saved.');
+      setError(getErrorMessage(updateError, 'Preference could not be saved.'));
     }
   }
 
@@ -174,8 +174,8 @@ export default function SettingsScreen() {
         await updatePreference('backgroundLocationSharing', false);
         await reconcileBackgroundLocationUpdates(user.id, false);
       } catch (rollbackError) {
-        const trackingMessage = trackingError instanceof Error ? trackingError.message : String(trackingError);
-        const rollbackMessage = rollbackError instanceof Error ? rollbackError.message : String(rollbackError);
+        const trackingMessage = getErrorMessage(trackingError, 'Background location could not start.');
+        const rollbackMessage = getErrorMessage(rollbackError, 'Background sharing could not be turned off.');
         throw new Error(`${trackingMessage} Background sharing could not be fully turned off: ${rollbackMessage}`);
       }
       throw trackingError;
@@ -240,6 +240,19 @@ export default function SettingsScreen() {
       </Modal>
     </SafeAreaView>
   );
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string' && error.trim()) return error;
+  if (error && typeof error === 'object') {
+    const details = error as Record<string, unknown>;
+    const code = typeof details.code === 'string' ? details.code : '';
+    const message = typeof details.message === 'string' ? details.message : '';
+    const description = [code, message].filter(Boolean).join(': ');
+    if (description) return description;
+  }
+  return fallback;
 }
 
 async function fetchEmergencyContacts(userId: string): Promise<EmergencyContact[]> {

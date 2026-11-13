@@ -1,5 +1,5 @@
     const githubRepository = "chanespago/ResQ";
-    const apkFileName = "com.technichan.resq-app.apk";
+    const apkFileName = "com.technichan.resqapp.apk";
     const downloadLink = document.getElementById("apk-download");
     const downloadLabel = document.getElementById("apk-label");
     const downloadStatus = document.getElementById("download-status");
