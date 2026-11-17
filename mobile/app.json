@@ -3,7 +3,7 @@
     "name": "ResQ",
     "slug": "resq",
     "scheme": "resq",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -55,7 +55,7 @@
     },
     "android": {
       "package": "com.resq.safety",
-      "versionCode": 4,
+      "versionCode": 5,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "VIBRATE"
